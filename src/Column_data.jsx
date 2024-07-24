@@ -1,13 +1,13 @@
-const getItems = (count = 0, prefix = "") =>
+const getItems = (count) =>
   Array.from({ length: count }, (_, k) => k).map((k) => ({
-    id: `${prefix}-${k}`,
-    content: `${prefix} item ${k}`,
+    id: `${k}`,
+    content: ` item ${k}`,
   }));
 
 export const initialColumns = {
   col1: {
     name: "계획 중",
-    items: getItems(5, "col1"),
+    items: getItems(5),
   },
   col2: {
     name: "진행 중",
@@ -15,10 +15,10 @@ export const initialColumns = {
   },
   col3: {
     name: "완료",
-    items: getItems(5, "col3"),
+    items: [],
   },
   col4: {
     name: "삭제",
-    items: getItems(5, "col4"),
+    items: [],
   },
 };
