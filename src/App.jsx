@@ -45,11 +45,11 @@ const App = () => {
       const draggedItemId = draggedItem;
       const draggedItemIsEven = isEven(draggedItemId);
 
-      const destContainsEvenItem = destCol.items.some((item) =>
-        isEven(item.id)
-      );
-
-      if (draggedItemIsEven && destContainsEvenItem) {
+      if (
+        draggedItemIsEven &&
+        destination.index > 0 &&
+        isEven(destCol.items[destination.index - 1]?.id)
+      ) {
         return;
       }
 
@@ -188,7 +188,7 @@ const App = () => {
               addItem={colId === "col1" ? addItemToColumn : undefined}
               selectedItems={selectedItems}
               onItemSelect={handleItemSelect}
-              handleDeleteItem={handleDeleteItem} // 삭제 핸들러 전달
+              handleDeleteItem={handleDeleteItem}
             />
           ))}
         </div>
