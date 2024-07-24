@@ -7,8 +7,8 @@ const App = () => {
   const [columns, setColumns] = useState(initialColumns);
   const [nextItemId, setNextItemId] = useState(5);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [selectedItems, setSelectedItems] = useState([]);
 
-  // 짝수 번 앞에 짝수 아이템 앞에 이동 불가능
   const isEven = (itemId) => {
     if (!itemId) return false;
     const itemNumber = parseInt(itemId, 10);
@@ -31,6 +31,7 @@ const App = () => {
     (result) => {
       const { source, destination } = result;
       setDraggedItem(null);
+
       if (!destination) {
         return;
       }
@@ -43,32 +44,34 @@ const App = () => {
       const sourceCol = columns[source.droppableId];
       const destCol = columns[destination.droppableId];
       const draggedItemId = draggedItem;
-
-      // 이동할 수 있는지 여부를 체크
       const draggedItemIsEven = isEven(draggedItemId);
 
-      // 목적지에 짝수 아이템이 이미 있는지 확인
+      // 목적지 컬럼에 이미 짝수 아이템이 있는지 확인
       const destContainsEvenItem = destCol.items.some((item) =>
         isEven(item.id)
       );
 
-      // 짝수 아이템이 이동할 수 없는 경우
-      if (
-        draggedItemIsEven &&
-        destContainsEvenItem &&
-        destination.index <= source.index
-      ) {
+      // 짝수 아이템이 짝수 아이템이 있는 컬럼으로 이동할 수 없도록 함
+      if (draggedItemIsEven && destContainsEvenItem) {
         return;
       }
 
-      // 드래그된 아이템이 원래 컬럼으로 돌아가도록 처리
-      if (source.droppableId === destination.droppableId) {
-        const newItems = reorder(
-          sourceCol.items,
-          source.index,
-          destination.index
+      let itemsToMove;
+      if (selectedItems.length) {
+        itemsToMove = selectedItems.map((itemId) =>
+          sourceCol.items.find((item) => item.id === itemId)
         );
+      } else {
+        itemsToMove = [draggedItem].map((itemId) =>
+          sourceCol.items.find((item) => item.id === itemId)
+        );
+      }
 
+      const sourceItems = Array.from(sourceCol.items);
+      const destItems = Array.from(destCol.items);
+
+      if (source.droppableId === destination.droppableId) {
+        const newItems = reorder(sourceItems, source.index, destination.index);
         setColumns((prevColumns) => ({
           ...prevColumns,
           [source.droppableId]: {
@@ -77,10 +80,20 @@ const App = () => {
           },
         }));
       } else {
-        const sourceItems = Array.from(sourceCol.items);
-        const destItems = Array.from(destCol.items);
-        const [removed] = sourceItems.splice(source.index, 1);
-        destItems.splice(destination.index, 0, removed);
+        itemsToMove.forEach((item) => {
+          const itemIndex = sourceItems.findIndex((i) => i.id === item.id);
+          sourceItems.splice(itemIndex, 1);
+        });
+
+        let destinationIndex = destination.index;
+
+        itemsToMove.forEach((item) => {
+          if (destinationIndex > destItems.length) {
+            destinationIndex = destItems.length;
+          }
+          destItems.splice(destinationIndex, 0, item);
+          destinationIndex++;
+        });
 
         setColumns((prevColumns) => ({
           ...prevColumns,
@@ -94,11 +107,12 @@ const App = () => {
           },
         }));
       }
+
+      setSelectedItems([]);
     },
-    [columns, draggedItem]
+    [columns, draggedItem, selectedItems]
   );
 
-  // 아이템 추가 버튼
   const addItemToColumn = () => {
     const newItem = {
       id: `${nextItemId}`,
@@ -116,7 +130,6 @@ const App = () => {
     setNextItemId((prevId) => prevId + 1);
   };
 
-  // 아이템 요소 스타일
   const getItemStyle = (isDragging, draggableId, source, destination) => {
     let bgColor = "bg-gray-300";
 
@@ -136,13 +149,20 @@ const App = () => {
     return `p-4 mb-2 rounded ${bgColor}`;
   };
 
-  // 컬럼 스타일
   const getListStyle = (isDraggingOver) =>
     `p-4 ${isDraggingOver ? "bg-blue-100" : "bg-gray-200"} w-64`;
 
+  const handleItemSelect = (itemId) => {
+    setSelectedItems((prevSelectedItems) =>
+      prevSelectedItems.includes(itemId)
+        ? prevSelectedItems.filter((id) => id !== itemId)
+        : [...prevSelectedItems, itemId]
+    );
+  };
+
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="flex gap-4 p-4 overflow-x-auto max-w-full">
+      <div className="flex gap-4 p-4 m-4 overflow-x-auto max-w-full">
         <div className="flex space-x-4">
           {Object.entries(columns).map(([colId, colData]) => (
             <DroppableColumn
@@ -153,7 +173,9 @@ const App = () => {
               getItemStyle={(isDragging, draggableId, source, destination) =>
                 getItemStyle(isDragging, draggableId, source, destination)
               }
-              addItem={colId === "col1" ? addItemToColumn : undefined} // 첫 번째 컬럼에만 아이템 추가 기능 제공
+              addItem={colId === "col1" ? addItemToColumn : undefined}
+              selectedItems={selectedItems}
+              onItemSelect={handleItemSelect}
             />
           ))}
         </div>
