@@ -10,7 +10,12 @@ const DroppableColumn = ({
   addItem,
   selectedItems,
   onItemSelect,
+  handleDeleteItem,
 }) => {
+  const handleDelete = (itemId) => {
+    handleDeleteItem(itemId);
+  };
+
   return (
     <div className="m-4">
       <h3 className="text-lg font-semibold text-center">{columnData.name}</h3>
@@ -31,15 +36,26 @@ const DroppableColumn = ({
           >
             <div className="flex-1 p-2 overflow-y-auto flex flex-col">
               {columnData.items.map((item, index) => (
-                <DraggableItem
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  getItemStyle={getItemStyle}
-                  source={{ droppableId: columnId, index }}
-                  onSelect={onItemSelect}
-                  isSelected={selectedItems.includes(item.id)}
-                />
+                <div key={item.id} className="relative">
+                  <DraggableItem
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    getItemStyle={getItemStyle}
+                    source={{ droppableId: columnId, index }}
+                    onSelect={onItemSelect}
+                    isSelected={selectedItems.includes(item.id)}
+                  />
+                  {/* 아이템 삭제 */}
+                  {columnId === "col4" && (
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="absolute top-1 right-1 w-6 h-6 text-red-500 rounded-full flex items-center justify-center text-lg font-bold "
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               ))}
               {provided.placeholder}
             </div>
