@@ -16,16 +16,17 @@ const DraggableItem = ({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`${getItemStyle(
+          className={getItemStyle(
             snapshot.isDragging,
             item.id,
             source,
             snapshot.draggingOver
-          )} ${isSelected ? "bg-blue-300" : ""}`}
+          )}
           onClick={() => onSelect(item.id)}
           style={{
             ...provided.draggableProps.style,
             cursor: "pointer",
+            backgroundColor: isSelected ? "#93c5fd" : "",
           }}
         >
           {item.content}
